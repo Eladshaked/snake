@@ -1,0 +1,150 @@
+import pygame
+import time
+import random
+pygame.init()
+
+def snake_color():
+    snake_start = 300
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+            mouse_pos = pygame.mouse.get_pos()
+            for i in range(4):
+                if (150+100*i) < mouse_pos[0] < (200+100*i) and 200 < mouse_pos[1] < 250:
+                    pygame.draw.rect(screen, (255, 255, 100), [147+100*i, 197, 55, 55])
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        if i == 0:
+                            return (76, 153, 100)
+                        elif i == 1:
+                            return (0, 128, 255)
+                        elif i == 2:
+                            return (224, 224, 224)
+                        elif i == 3:
+                            return (255, 0, 127)
+            snake_start_affect()
+            # pygame.draw.rect(screen, (255, 0, 127), [snake_start, 450, 15, 15])
+            # snake_start += 20
+            # if snake_start >= 600:
+            #     snake_start = 0
+
+            pygame.display.update()
+            screen.fill((0, 0, 0))
+            #clock.tick(4)
+
+def snake_start_affect():
+    font = pygame.font.Font("freesansbold.ttf", 23)
+    color_ask = font.render(("Choose a color"), True, (255, 255, 255))
+    screen.blit(color_ask, (230, 100))
+    pygame.draw.rect(screen, (76, 153, 100), [150, 200, 50, 50])
+    pygame.draw.rect(screen, (0, 128, 255), [250, 200, 50, 50])
+    pygame.draw.rect(screen, (224, 224, 224), [350, 200, 50, 50])
+    pygame.draw.rect(screen, (255, 0, 127), [450, 200, 50, 50])
+    arrows = pygame.image.load('arrows.png')
+    screen.blit(arrows, (225, 275))
+
+
+def food():
+    current_snake = snake[:score+1]
+    x_apple = (random.randint(0,29))*20+1
+    y_apple = (random.randint(0,29))*20+1
+    if (x_apple, y_apple) in current_snake:
+        food()
+    return (x_apple, y_apple)
+
+def all_snake(xstart, ystart):
+    snake.insert(0,(xstart, ystart))
+    for i in range ((score+1)):
+        pygame.draw.rect(screen, (Snake_color), [(snake[i][0]), (snake[i][1]), 15, 15])
+
+
+def snake_krash(xstart, ystart, snake):
+    current_snake = []
+    for i in range(1,(score+1)):
+        current_snake.append(snake[i])
+    if (xstart, ystart) in current_snake:
+        return True
+
+def out_of_line(xstart, ystart):
+    if xstart <= 0 or xstart >= 582 or ystart <= 0 or ystart >= 582:
+        return True
+
+
+def lose(xstart, ystart, score):
+    font = pygame.font.Font("freesansbold.ttf", 22)
+    restart = font.render(("you lose click 'r' to reastart"), True, (255, 255, 255))
+    all_snake(xstart, ystart)
+    screen.blit(restart, (175, 200))
+    pygame.display.update()
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_r:
+                    return True
+
+clock = pygame.time.Clock()
+screen = pygame.display.set_mode((601, 601))
+snake = [(21, 21)]
+last_direction = None
+score = 0
+pygame.display.set_caption('Snake')
+xstart, ystart = 21, 21
+xy_apple = (301,301)
+x, y = 0, 0
+Snake_color = snake_color()
+game_over = False
+
+while not game_over:
+    for event in pygame.event.get():
+
+        if event.type == pygame.QUIT:
+            game_over = True
+
+        elif event.type == pygame.KEYDOWN:
+
+                if event.key == pygame.K_LEFT:
+                    if x != 20:
+                        x = -20
+                    y = 0
+                elif event.key == pygame.K_RIGHT:
+                    if x != -20:
+                        x = 20
+                    y = 0
+                elif event.key == pygame.K_UP:
+                    x = 0
+                    if y != 20:
+                        y = -20
+                elif event.key == pygame.K_DOWN:
+                    x = 0
+                    if y != -20:
+                        y = 20
+
+    xstart += x
+    ystart += y
+    screen.fill((0,0,0))
+    if xstart == xy_apple[0] and ystart == xy_apple[1]:
+        score += 1
+        xy_apple = food()
+
+
+    if out_of_line(xstart, ystart) or snake_krash(xstart, ystart, snake):
+        while not lose(xstart, ystart, score):
+            lose(xstart, ystart, score)
+        screen.fill((0, 0, 0))
+        snake = []
+        xstart, ystart = 21, 21
+        x, y, score = 0, 0, 0
+        Snake_color = snake_color()
+    all_snake(xstart, ystart)
+    snake_krash(xstart, ystart, snake)
+    apple = pygame.image.load('apple.png')
+    screen.blit(apple, xy_apple)
+    font = pygame.font.Font("freesansbold.ttf", 27)
+    scoreboard = font.render(str(f"score: {score}"), True, (255, 255, 255))
+    screen.blit(scoreboard, (10, 10))
+
+    pygame.display.update()
+    clock.tick(5)
+pygame.quit()
